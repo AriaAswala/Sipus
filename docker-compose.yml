@@ -1,0 +1,54 @@
+version: '3.8'
+
+services:
+  # Service 1: Web Server PHP 8.2 + Apache
+  web:
+    build: .
+    container_name: sipus_web
+    ports:
+      - "8080:80" # Akses web di http://localhost:8080
+    volumes:
+      - .:/var/www/html # Menghubungkan folder proyek lokal ke server Docker
+    depends_on:
+      - db
+    networks:
+      - sipus_network
+
+  # Service 2: Database MySQL 8.0
+  db:
+    image: mysql:8.0
+    container_name: sipus_db
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: sipus_db
+      MYSQL_USER: sipus_user
+      MYSQL_PASSWORD: sipus_password
+    ports:
+      - "3307:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+      # Otomatis mengimpor skema database SQL saat container pertama kali dibuat
+      - ./database/sipus_db.sql:/docker-entrypoint-initdb.d/sipus_db.sql
+    networks:
+      - sipus_network
+
+  # Service 3: phpMyAdmin (Kelola database via browser)
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: sipus_phpmyadmin
+    environment:
+      PMA_HOST: db
+      MYSQL_ROOT_PASSWORD: rootpassword
+    ports:
+      - "8081:80" # Akses phpMyAdmin di http://localhost:8081
+    depends_on:
+      - db
+    networks:
+      - sipus_network
+
+networks:
+  sipus_network:
+    driver: bridge
+
+volumes:
+  db_data:
