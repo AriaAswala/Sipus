@@ -29,7 +29,7 @@ if (!$buku) {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $isbn             = trim($_POST['isbn']);
+    $isbn             = $buku['isbn'];
     $title            = trim($_POST['title']);
     $author           = trim($_POST['author']);
     $publisher        = trim($_POST['publisher']);
@@ -100,8 +100,8 @@ include '../templates/sidebar_staff.php';
                         <form action="edit.php?id=<?= $id; ?>" method="POST">
                             <div class="row g-3">
                                 <div class="col-md-6">
-                                    <label class="form-label fw-bold small">Nomor ISBN</label>
-                                    <input type="text" name="isbn" class="form-control" value="<?= htmlspecialchars($buku['isbn']); ?>" required>
+                                    <label class="form-label fw-bold small">Kode Buku / ISBN (Otomatis)</label>
+                                    <input type="text" name="isbn" class="form-control bg-light fw-bold" value="<?= htmlspecialchars($buku['isbn']); ?>" readonly>
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label fw-bold small">Kategori Buku</label>

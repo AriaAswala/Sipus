@@ -13,9 +13,29 @@ cek_akses(['admin', 'pustakawan']);
 
 $error = '';
 
+// Fungsi membuat Kode Buku / ISBN otomatis (978-602-0006, dst.)
+function generate_book_isbn($koneksi) {
+    $res = mysqli_query($koneksi, "SELECT MAX(id) as max_id FROM books");
+    $row = $res ? mysqli_fetch_assoc($res) : null;
+    $next_num = ($row && $row['max_id']) ? ((int)$row['max_id'] + 1) : 1;
+    while (true) {
+        $candidate = '978-602-' . str_pad($next_num, 4, '0', STR_PAD_LEFT);
+        $stmt_chk = mysqli_prepare($koneksi, "SELECT id FROM books WHERE isbn = ? LIMIT 1");
+        mysqli_stmt_bind_param($stmt_chk, "s", $candidate);
+        mysqli_stmt_execute($stmt_chk);
+        mysqli_stmt_store_result($stmt_chk);
+        $exists = mysqli_stmt_num_rows($stmt_chk) > 0;
+        mysqli_stmt_close($stmt_chk);
+        if (!$exists) {
+            return $candidate;
+        }
+        $next_num++;
+    }
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Ambil data dan bersihkan dari whitespace
-    $isbn             = trim($_POST['isbn']);
+    // Buat Kode Buku / ISBN otomatis dan bersihkan input dari whitespace
+    $isbn             = generate_book_isbn($koneksi);
     $title            = trim($_POST['title']);
     $author           = trim($_POST['author']);
     $publisher        = trim($_POST['publisher']);
@@ -24,7 +44,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $total_stock      = (int)$_POST['total_stock'];
 
     // Validasi sederhana
-    if (empty($isbn) || empty($title) || empty($author) || empty($publisher) || empty($publication_year) || empty($category) || $total_stock < 1) {
+    if (empty($title) || empty($author) || empty($publisher) || empty($publication_year) || empty($category) || $total_stock < 1) {
         $error = 'Semua field wajib diisi dan stok minimal 1!';
     } else {
         // Cek ISBN duplikat via prepared statement
@@ -70,6 +90,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 }
+$auto_isbn = generate_book_isbn($koneksi);
+
 $page_title  = 'Tambah Buku Baru';
 $active_page = 'buku';
 $base_url    = '../';
@@ -102,8 +124,8 @@ include '../templates/sidebar_staff.php';
                         <form action="tambah.php" method="POST">
                             <div class="row g-3">
                                 <div class="col-md-6">
-                                    <label class="form-label fw-bold small">Nomor ISBN</label>
-                                    <input type="text" name="isbn" class="form-control" placeholder="Contoh: 978-602-0006" required>
+                                    <label class="form-label fw-bold small">Kode Buku / ISBN (Otomatis)</label>
+                                    <input type="text" name="isbn" class="form-control bg-light fw-bold" value="<?= htmlspecialchars($auto_isbn); ?>" readonly>
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label fw-bold small">Kategori Buku</label>

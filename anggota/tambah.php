@@ -13,16 +13,36 @@ cek_akses(['admin', 'pustakawan']);
 
 $error = '';
 
+// Fungsi membuat Kode Anggota otomatis (ANG001, ANG002, dst.)
+function generate_member_code($koneksi) {
+    $res = mysqli_query($koneksi, "SELECT MAX(id) as max_id FROM members");
+    $row = $res ? mysqli_fetch_assoc($res) : null;
+    $next_num = ($row && $row['max_id']) ? ((int)$row['max_id'] + 1) : 1;
+    while (true) {
+        $candidate = 'ANG' . str_pad($next_num, 3, '0', STR_PAD_LEFT);
+        $stmt_chk = mysqli_prepare($koneksi, "SELECT id FROM members WHERE member_code = ? LIMIT 1");
+        mysqli_stmt_bind_param($stmt_chk, "s", $candidate);
+        mysqli_stmt_execute($stmt_chk);
+        mysqli_stmt_store_result($stmt_chk);
+        $exists = mysqli_stmt_num_rows($stmt_chk) > 0;
+        mysqli_stmt_close($stmt_chk);
+        if (!$exists) {
+            return $candidate;
+        }
+        $next_num++;
+    }
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $member_code = trim($_POST['member_code']);
+    $member_code = generate_member_code($koneksi);
     $full_name   = trim($_POST['full_name']);
     $username    = trim($_POST['username']);
     $password    = trim($_POST['password']);
     $phone       = trim($_POST['phone']);
     $address     = trim($_POST['address']);
 
-    if (empty($member_code) || empty($full_name) || empty($username) || empty($password)) {
-        $error = 'Kode Anggota, Nama Lengkap, Username, dan Password wajib diisi!';
+    if (empty($full_name) || empty($username) || empty($password)) {
+        $error = 'Nama Lengkap, Username, dan Password wajib diisi!';
     } else {
         // 1. Cek duplikasi username
         $sql_u = "SELECT id FROM users WHERE username = ? LIMIT 1";
@@ -84,6 +104,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 }
+$auto_member_code = generate_member_code($koneksi);
+
 $page_title  = 'Tambah Anggota Baru';
 $active_page = 'anggota';
 $base_url    = '../';
@@ -116,8 +138,8 @@ include '../templates/sidebar_staff.php';
                         <form action="tambah.php" method="POST">
                             <div class="row g-3">
                                 <div class="col-md-6">
-                                    <label class="form-label fw-bold small">Kode Anggota</label>
-                                    <input type="text" name="member_code" class="form-control" placeholder="Contoh: ANG002" required>
+                                    <label class="form-label fw-bold small">Kode Anggota (Otomatis)</label>
+                                    <input type="text" name="member_code" class="form-control bg-light fw-bold" value="<?= htmlspecialchars($auto_member_code); ?>" readonly>
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label fw-bold small">Nama Lengkap</label>
