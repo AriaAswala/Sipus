@@ -13,13 +13,13 @@ cek_akses(['admin', 'pustakawan']);
 
 $error = '';
 
-// Fungsi membuat Kode Buku / ISBN otomatis (978-602-0006, dst.)
+// Fungsi membuat Kode Buku otomatis (BK001, BK002, dst.)
 function generate_book_isbn($koneksi) {
     $res = mysqli_query($koneksi, "SELECT MAX(id) as max_id FROM books");
     $row = $res ? mysqli_fetch_assoc($res) : null;
     $next_num = ($row && $row['max_id']) ? ((int)$row['max_id'] + 1) : 1;
     while (true) {
-        $candidate = '978-602-' . str_pad($next_num, 4, '0', STR_PAD_LEFT);
+        $candidate = 'BK' . str_pad($next_num, 3, '0', STR_PAD_LEFT);
         $stmt_chk = mysqli_prepare($koneksi, "SELECT id FROM books WHERE isbn = ? LIMIT 1");
         mysqli_stmt_bind_param($stmt_chk, "s", $candidate);
         mysqli_stmt_execute($stmt_chk);
@@ -124,7 +124,7 @@ include '../templates/sidebar_staff.php';
                         <form action="tambah.php" method="POST">
                             <div class="row g-3">
                                 <div class="col-md-6">
-                                    <label class="form-label fw-bold small">Kode Buku / ISBN (Otomatis)</label>
+                                    <label class="form-label fw-bold small">Kode Buku (Otomatis)</label>
                                     <input type="text" name="isbn" class="form-control bg-light fw-bold" value="<?= htmlspecialchars($auto_isbn); ?>" readonly>
                                 </div>
                                 <div class="col-md-6">

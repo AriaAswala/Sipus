@@ -100,7 +100,7 @@ include '../templates/sidebar_staff.php';
                         <form action="edit.php?id=<?= $id; ?>" method="POST">
                             <div class="row g-3">
                                 <div class="col-md-6">
-                                    <label class="form-label fw-bold small">Kode Buku / ISBN (Otomatis)</label>
+                                    <label class="form-label fw-bold small">Kode Buku (Otomatis)</label>
                                     <input type="text" name="isbn" class="form-control bg-light fw-bold" value="<?= htmlspecialchars($buku['isbn']); ?>" readonly>
                                 </div>
                                 <div class="col-md-6">

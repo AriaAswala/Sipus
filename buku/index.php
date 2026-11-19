@@ -80,7 +80,7 @@ include '../templates/sidebar_staff.php';
             <div class="card-body p-3">
                 <form action="index.php" method="GET" class="row g-2">
                     <div class="col-md-10">
-                        <input type="text" name="q" class="form-control" placeholder="Cari berdasarkan judul, pengarang, ISBN, atau kategori..." value="<?= htmlspecialchars($keyword); ?>">
+                        <input type="text" name="q" class="form-control" placeholder="Cari berdasarkan judul, pengarang, kode buku, atau kategori..." value="<?= htmlspecialchars($keyword); ?>">
                     </div>
                     <div class="col-md-2 d-flex gap-1">
                         <button type="submit" class="btn btn-dark w-100">🔍 Cari</button>
@@ -110,7 +110,7 @@ include '../templates/sidebar_staff.php';
                         <thead>
                             <tr>
                                 <th class="text-center" style="width:50px;">No</th>
-                                <th>ISBN</th>
+                                <th>Kode Buku</th>
                                 <th>Judul Buku</th>
                                 <th>Pengarang</th>
                                 <th>Penerbit / Thn</th>

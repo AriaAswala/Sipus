@@ -112,11 +112,11 @@ INSERT INTO `members` (`id`, `user_id`, `member_code`, `phone`, `address`, `stat
 
 -- 3. Seed Data 5 Buku Utama
 INSERT INTO `books` (`id`, `isbn`, `title`, `author`, `publisher`, `publication_year`, `category`, `total_stock`, `available_stock`) VALUES
-(1, '978-602-0001', 'Pemrograman Web PHP Native & MySQL', 'Rian Hidayat', 'Informatika Press', 2023, 'Pemrograman', 3, 3),
-(2, '978-602-0002', 'Rekayasa Perangkat Lunak Sederhana', 'Dr. Eng. Ahmad Subagyo', 'Tekno Media', 2022, 'Rekayasa Perangkat Lunak', 2, 2),
-(3, '978-602-0003', 'Menguasai Database MySQL dari Nol', 'Dewi Lestari', 'Penerbit Cerdas', 2021, 'Database', 4, 4),
-(4, '978-602-0004', 'Analisis dan Perancangan Sistem Informasi', 'Bambang Pratama', 'Mitra Wacana', 2023, 'Sistem Informasi', 2, 2),
-(5, '978-602-0005', 'Panduan Praktis Bootstrap 5 untuk Pemula', 'Eko Kurniawan', 'Media Komputer', 2024, 'Web Design', 3, 3);
+(1, 'BK001', 'Pemrograman Web PHP Native & MySQL', 'Rian Hidayat', 'Informatika Press', 2023, 'Pemrograman', 3, 3),
+(2, 'BK002', 'Rekayasa Perangkat Lunak Sederhana', 'Dr. Eng. Ahmad Subagyo', 'Tekno Media', 2022, 'Rekayasa Perangkat Lunak', 2, 2),
+(3, 'BK003', 'Menguasai Database MySQL dari Nol', 'Dewi Lestari', 'Penerbit Cerdas', 2021, 'Database', 4, 4),
+(4, 'BK004', 'Analisis dan Perancangan Sistem Informasi', 'Bambang Pratama', 'Mitra Wacana', 2023, 'Sistem Informasi', 2, 2),
+(5, 'BK005', 'Panduan Praktis Bootstrap 5 untuk Pemula', 'Eko Kurniawan', 'Media Komputer', 2024, 'Web Design', 3, 3);
 
 -- 4. Seed Data Eksemplar / Salinan Buku (book_copies)
 INSERT INTO `book_copies` (`book_id`, `copy_code`, `status`) VALUES

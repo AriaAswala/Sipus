@@ -118,7 +118,7 @@ if (!empty($keyword)) {
                     <div class="search-box">
                         <form action="index.php" method="GET" class="row g-2">
                             <div class="col-md-9">
-                                <input type="text" name="q" class="form-control form-control-lg" placeholder="Ketik judul buku, pengarang, ISBN, atau kategori..." value="<?= htmlspecialchars($keyword); ?>">
+                                <input type="text" name="q" class="form-control form-control-lg" placeholder="Ketik judul buku, pengarang, kode buku, atau kategori..." value="<?= htmlspecialchars($keyword); ?>">
                             </div>
                             <div class="col-md-3">
                                 <button type="submit" class="btn btn-warning btn-lg w-100 fw-bold">🔍 Cari Buku</button>
@@ -155,7 +155,7 @@ if (!empty($keyword)) {
                         <thead class="table-dark">
                             <tr>
                                 <th class="text-center" style="width: 50px;">No</th>
-                                <th>ISBN</th>
+                                <th>Kode Buku</th>
                                 <th>Judul Buku</th>
                                 <th>Pengarang</th>
                                 <th>Kategori</th>
