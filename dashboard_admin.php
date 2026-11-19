@@ -2,89 +2,222 @@
 /**
  * File: dashboard_admin.php
  * Lokasi: sipus/dashboard_admin.php
- * Deskripsi: Halaman utama dashboard untuk peran Admin.
+ * Deskripsi: Halaman utama dashboard untuk peran Admin dengan tampilan sidebar modern.
  */
 
 require_once 'cek_login.php';
+require_once 'config/koneksi.php';
 // Proteksi halaman: Hanya peran 'admin' yang diperbolehkan masuk
 cek_akses(['admin']);
+
+// =============================================
+// Query Statistik Dashboard Admin
+// =============================================
+
+// Total buku
+$total_buku = mysqli_fetch_assoc(mysqli_query($koneksi, "SELECT COUNT(*) as total FROM books"))['total'];
+
+// Total anggota aktif
+$total_anggota = mysqli_fetch_assoc(mysqli_query($koneksi, "SELECT COUNT(*) as total FROM members WHERE status='aktif'"))['total'];
+
+// Pinjaman aktif hari ini
+$pinjaman_aktif = mysqli_fetch_assoc(mysqli_query($koneksi, "SELECT COUNT(*) as total FROM loans WHERE status='dipinjam'"))['total'];
+
+// Buku terlambat
+$buku_terlambat = mysqli_fetch_assoc(mysqli_query($koneksi, "SELECT COUNT(*) as total FROM loans WHERE status='dipinjam' AND due_date < CURDATE()"))['total'];
+
+// Total denda belum lunas
+$total_denda = mysqli_fetch_assoc(mysqli_query($koneksi, "SELECT COALESCE(SUM(fine_amount),0) as total FROM fines WHERE status='belum_dibayar'"))['total'];
+
+// 5 pinjaman terbaru
+$sql_recent = "SELECT l.*, b.title as book_title, u.full_name as member_name, m.member_code,
+                      DATEDIFF(CURDATE(), l.due_date) as late_days
+               FROM loans l
+               JOIN books b ON l.book_id = b.id
+               JOIN members m ON l.member_id = m.id
+               JOIN users u ON m.user_id = u.id
+               ORDER BY l.id DESC LIMIT 5";
+$result_recent = mysqli_query($koneksi, $sql_recent);
+
+// Waktu sapaan
+$hour = (int)date('H');
+if ($hour < 12) $sapaan = 'Selamat Pagi';
+elseif ($hour < 15) $sapaan = 'Selamat Siang';
+elseif ($hour < 18) $sapaan = 'Selamat Sore';
+else $sapaan = 'Selamat Malam';
+
+// Pengaturan template
+$page_title  = 'Dashboard Admin';
+$active_page = 'dashboard';
+$base_url    = '';
+$breadcrumb  = '<a href="dashboard_admin.php">Beranda</a> / <strong>Dashboard</strong>';
+
+include 'templates/header.php';
+include 'templates/sidebar_staff.php';
 ?>
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Admin - SIPUS</title>
-    <!-- Bootstrap 5 CSS via CDN -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body class="bg-light">
 
-    <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm">
-        <div class="container">
-            <a class="navbar-brand fw-bold" href="#">📚 SIPUS RPL - Admin</a>
-            <div class="d-flex align-items-center">
-                <span class="text-white me-3">Halo, <strong><?= htmlspecialchars($_SESSION['full_name']); ?></strong> (Admin)</span>
-                <a href="logout.php" class="btn btn-outline-danger btn-sm">Logout</a>
-            </div>
+<div class="main-content">
+    <?php include 'templates/topnav.php'; ?>
+    <div class="content-wrapper">
+
+        <!-- Welcome Banner -->
+        <div class="welcome-banner mb-4">
+            <h3>👋 <?= $sapaan; ?>, <?= htmlspecialchars(explode(' ', $_SESSION['full_name'])[0]); ?>!</h3>
+            <p>Selamat datang di panel Administrator SIPUS. Anda memiliki akses penuh untuk mengelola seluruh data perpustakaan.</p>
         </div>
-    </nav>
 
-    <!-- Main Content -->
-    <div class="container py-5">
-        <div class="row">
-            <div class="col-md-12">
-                <div class="card shadow-sm border-0 mb-4">
-                    <div class="card-body p-4">
-                        <h2 class="card-title fw-bold text-primary">Selamat Datang di Dashboard Admin</h2>
-                        <p class="card-text text-muted">
-                            Anda memiliki akses penuh untuk mengelola pengguna (Pustakawan & Anggota), serta melihat seluruh laporan transaksi perpustakaan.
-                        </p>
-                        <div class="alert alert-info" role="alert">
-                            ℹ️ <strong>Status Login:</strong> Anda berhasil masuk sebagai <strong><?= htmlspecialchars($_SESSION['username']); ?></strong> dengan Peran: <span class="badge bg-primary"><?= uppercase($_SESSION['role']); ?></span>.
+        <!-- Alert Buku Terlambat -->
+        <?php if ($buku_terlambat > 0): ?>
+        <div class="alert alert-warning d-flex align-items-center mb-4" role="alert" style="border-radius:10px; border-left:4px solid #F39C12;">
+            <span style="font-size:24px; margin-right:12px;">⏰</span>
+            <div>
+                <strong><?= $buku_terlambat; ?> buku melewati jatuh tempo!</strong><br>
+                <span class="small">Segera proses pengembalian melalui menu Sirkulasi Peminjaman.</span>
+            </div>
+            <a href="peminjaman/index.php" class="btn btn-sm btn-warning ms-auto fw-bold">Proses →</a>
+        </div>
+        <?php endif; ?>
+
+        <!-- Statistik Cards -->
+        <div class="row g-3 mb-4">
+            <div class="col-md-3 col-6">
+                <div class="card stat-card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <div class="stat-value text-primary"><?= $total_buku; ?></div>
+                                <div class="stat-label">Total Judul Buku</div>
+                            </div>
+                            <div class="stat-icon" style="background:#EBF5FB; color:#2980B9;">📖</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 col-6">
+                <div class="card stat-card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <div class="stat-value text-success"><?= $total_anggota; ?></div>
+                                <div class="stat-label">Anggota Aktif</div>
+                            </div>
+                            <div class="stat-icon" style="background:#EAFAF1; color:#27AE60;">👥</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 col-6">
+                <div class="card stat-card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <div class="stat-value" style="color:#F39C12;"><?= $pinjaman_aktif; ?></div>
+                                <div class="stat-label">Sedang Dipinjam</div>
+                            </div>
+                            <div class="stat-icon" style="background:#FEF9E7; color:#F39C12;">📦</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 col-6">
+                <div class="card stat-card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <div class="stat-value" style="color:#E74C3C; font-size:20px;">Rp <?= number_format($total_denda, 0, ',', '.'); ?></div>
+                                <div class="stat-label">Denda Tertunggak</div>
+                            </div>
+                            <div class="stat-icon" style="background:#FDEDEC; color:#E74C3C;">💰</div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="row g-4">
-            <div class="col-md-4">
-                <div class="card border-0 shadow-sm h-100 text-white bg-primary">
-                    <div class="card-body p-4">
-                        <h5>Manajemen Pengguna</h5>
-                        <p class="small opacity-75">Kelola akun Admin, Pustakawan, dan Anggota.</p>
-                        <a href="anggota/index.php" class="btn btn-light btn-sm fw-bold">Buka Fitur &rarr;</a>
-                    </div>
-                </div>
+        <!-- Quick Actions -->
+        <div class="row g-3 mb-4">
+            <div class="col-md-3 col-6">
+                <a href="buku/index.php" class="quick-action w-100">
+                    <div class="qa-icon" style="background:#EBF5FB; color:#2980B9;">📖</div>
+                    <div><div>Data Buku</div><small class="text-muted fw-normal">Kelola koleksi</small></div>
+                </a>
             </div>
-            <div class="col-md-4">
-                <div class="card border-0 shadow-sm h-100 text-white bg-success">
-                    <div class="card-body p-4">
-                        <h5>Katalog Buku</h5>
-                        <p class="small opacity-75">Lihat data koleksi buku & eksemplar.</p>
-                        <a href="buku/index.php" class="btn btn-light btn-sm fw-bold">Buka Fitur &rarr;</a>
-                    </div>
-                </div>
+            <div class="col-md-3 col-6">
+                <a href="anggota/index.php" class="quick-action w-100">
+                    <div class="qa-icon" style="background:#EAFAF1; color:#27AE60;">👥</div>
+                    <div><div>Data Anggota</div><small class="text-muted fw-normal">Kelola anggota</small></div>
+                </a>
             </div>
-            <div class="col-md-4">
-                <div class="card border-0 shadow-sm h-100 text-white bg-warning text-dark">
-                    <div class="card-body p-4">
-                        <h5>Sirkulasi Peminjaman</h5>
-                        <p class="small opacity-75">Transaksi peminjaman dan denda.</p>
-                        <a href="peminjaman/index.php" class="btn btn-warning btn-sm fw-bold text-dark">Sirkulasi &rarr;</a>
-                        <a href="laporan/index.php" class="btn btn-dark btn-sm fw-bold text-white ms-1">Laporan &rarr;</a>
-                    </div>
+            <div class="col-md-3 col-6">
+                <a href="peminjaman/index.php" class="quick-action w-100">
+                    <div class="qa-icon" style="background:#FEF9E7; color:#F39C12;">🔄</div>
+                    <div><div>Sirkulasi</div><small class="text-muted fw-normal">Pinjam & Kembali</small></div>
+                </a>
+            </div>
+            <div class="col-md-3 col-6">
+                <a href="laporan/index.php" class="quick-action w-100">
+                    <div class="qa-icon" style="background:#F5EEF8; color:#8E44AD;">📊</div>
+                    <div><div>Laporan</div><small class="text-muted fw-normal">Rekap & cetak</small></div>
+                </a>
+            </div>
+        </div>
+
+        <!-- Tabel Transaksi Terbaru -->
+        <div class="card content-card">
+            <div class="card-header">
+                <span>🔄 Transaksi Peminjaman Terbaru</span>
+                <a href="peminjaman/index.php" class="btn btn-sm btn-outline-primary">Lihat Semua →</a>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-modern">
+                        <thead>
+                            <tr>
+                                <th>Anggota</th>
+                                <th>Judul Buku</th>
+                                <th>Tgl Pinjam</th>
+                                <th>Jatuh Tempo</th>
+                                <th class="text-center">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php if ($result_recent && mysqli_num_rows($result_recent) > 0):
+                                while ($row = mysqli_fetch_assoc($result_recent)):
+                                    $is_late = ($row['status'] === 'dipinjam' && $row['late_days'] > 0);
+                            ?>
+                            <tr>
+                                <td>
+                                    <strong><?= htmlspecialchars($row['member_name']); ?></strong><br>
+                                    <small class="text-muted"><?= htmlspecialchars($row['member_code']); ?></small>
+                                </td>
+                                <td><?= htmlspecialchars($row['book_title']); ?></td>
+                                <td><?= date('d/m/Y', strtotime($row['loan_date'])); ?></td>
+                                <td>
+                                    <?= date('d/m/Y', strtotime($row['due_date'])); ?>
+                                    <?php if ($is_late): ?>
+                                        <br><small class="text-danger">⏰ Terlambat <?= $row['late_days']; ?> hari</small>
+                                    <?php endif; ?>
+                                </td>
+                                <td class="text-center">
+                                    <?php if ($row['status'] === 'dipinjam'): ?>
+                                        <span class="badge-status" style="background:<?= $is_late ? '#FDEDEC' : '#FEF9E7'; ?>; color:<?= $is_late ? '#E74C3C' : '#F39C12'; ?>;">
+                                            <?= $is_late ? 'TERLAMBAT' : 'DIPINJAM'; ?>
+                                        </span>
+                                    <?php else: ?>
+                                        <span class="badge-status" style="background:#EAFAF1; color:#27AE60;">DIKEMBALIKAN</span>
+                                    <?php endif; ?>
+                                </td>
+                            </tr>
+                            <?php endwhile; else: ?>
+                            <tr><td colspan="5" class="text-center py-4 text-muted">Belum ada transaksi peminjaman.</td></tr>
+                            <?php endif; ?>
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
-    </div>
 
-    <?php
-    function uppercase($str) {
-        return strtoupper($str);
-    }
-    ?>
-</body>
-</html>
+    </div><!-- /content-wrapper -->
+</div><!-- /main-content -->
+
+<?php include 'templates/footer.php'; ?>

@@ -17,12 +17,15 @@ $tgl_selesai = isset($_GET['tgl_selesai']) ? trim($_GET['tgl_selesai']) : date('
 $status_filter = isset($_GET['status']) ? trim($_GET['status']) : '';
 
 // 1. Hitung Statistik Ringkasan Peminjaman
+// Termasuk estimasi denda berjalan untuk buku yang sudah terlambat tapi belum dikembalikan
 $sql_stat = "SELECT 
                 COUNT(*) as total_loans,
                 SUM(CASE WHEN l.status = 'dipinjam' THEN 1 ELSE 0 END) as total_active,
                 SUM(CASE WHEN l.status = 'dikembalikan' THEN 1 ELSE 0 END) as total_returned,
                 COALESCE(SUM(CASE WHEN f.status = 'lunas' THEN f.fine_amount ELSE 0 END), 0) as fine_paid,
-                COALESCE(SUM(CASE WHEN f.status = 'belum_dibayar' THEN f.fine_amount ELSE 0 END), 0) as fine_unpaid
+                COALESCE(SUM(CASE WHEN f.status = 'belum_dibayar' THEN f.fine_amount ELSE 0 END), 0) 
+                + COALESCE(SUM(CASE WHEN l.status = 'dipinjam' AND l.due_date < CURDATE() AND f.id IS NULL 
+                    THEN DATEDIFF(CURDATE(), l.due_date) * 2000 ELSE 0 END), 0) as fine_unpaid
              FROM loans l
              LEFT JOIN fines f ON f.loan_id = l.id";
 $res_stat = mysqli_query($koneksi, $sql_stat);
@@ -54,69 +57,33 @@ $stmt_lap = mysqli_prepare($koneksi, $sql_laporan);
 mysqli_stmt_bind_param($stmt_lap, $types, ...$params);
 mysqli_stmt_execute($stmt_lap);
 $result_laporan = mysqli_stmt_get_result($stmt_lap);
+
+// Pengaturan template
+$page_title  = 'Laporan & Denda';
+$active_page = 'laporan';
+$base_url    = '../';
+$breadcrumb  = '<a href="../dashboard_admin.php">Beranda</a> / Transaksi / <strong>Laporan & Denda</strong>';
+
+include '../templates/header.php';
+// CSS tambahan untuk print
 ?>
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Laporan Transaksi & Denda - SIPUS</title>
-    <!-- Bootstrap 5 CSS via CDN -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        @media print {
-            .no-print {
-                display: none !important;
-            }
-            body {
-                background-color: #ffffff !important;
-            }
-            .card {
-                border: none !important;
-                box-shadow: none !important;
-            }
-        }
-    </style>
-</head>
-<body class="bg-light">
+<style>
+@media print {
+    .sidebar, .top-navbar, .no-print { display: none !important; }
+    .main-content { margin-left: 0 !important; }
+    body { background: #fff !important; }
+}
+</style>
+<?php
+include '../templates/sidebar_staff.php';
+?>
 
-    <!-- Navbar Navigasi (Sembunyi saat dicetak) -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm mb-4 no-print">
-        <div class="container">
-            <a class="navbar-brand fw-bold" href="../dashboard_admin.php">📚 SIPUS RPL</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="<?= $_SESSION['role'] === 'admin' ? '../dashboard_admin.php' : '../dashboard_pustakawan.php'; ?>">Dashboard</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="../buku/index.php">Data Buku</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="../anggota/index.php">Data Anggota</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="../peminjaman/index.php">Sirkulasi Peminjaman</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link active fw-bold" href="index.php">Laporan</a>
-                    </li>
-                </ul>
-                <div class="d-flex align-items-center">
-                    <span class="text-white me-3 small">Halo, <strong><?= htmlspecialchars($_SESSION['full_name']); ?></strong> (<?= strtoupper($_SESSION['role']); ?>)</span>
-                    <a href="../logout.php" class="btn btn-outline-danger btn-sm">Logout</a>
-                </div>
-            </div>
-        </div>
-    </nav>
-
-    <div class="container py-2">
+<div class="main-content">
+    <?php include '../templates/topnav.php'; ?>
+    <div class="content-wrapper">
         
         <!-- Header & Tombol Cetak -->
-        <div class="d-flex justify-content-between align-items-center mb-3">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
             <div>
                 <h3 class="fw-bold text-dark mb-0">Laporan Sirkulasi & Denda</h3>
                 <p class="text-muted small mb-0">Periode: <strong><?= date('d/m/Y', strtotime($tgl_mulai)); ?></strong> s/d <strong><?= date('d/m/Y', strtotime($tgl_selesai)); ?></strong></p>
@@ -128,7 +95,7 @@ $result_laporan = mysqli_stmt_get_result($stmt_lap);
 
         <!-- Kartu Statistik Rekapitulasi (No Print Filter, But Keep Summary Cards) -->
         <div class="row g-3 mb-4">
-            <div class="col-md-3">
+            <div class="col-md-3 col-6">
                 <div class="card border-0 shadow-sm bg-primary text-white">
                     <div class="card-body p-3">
                         <div class="small opacity-75">Total Transaksi</div>
@@ -136,7 +103,7 @@ $result_laporan = mysqli_stmt_get_result($stmt_lap);
                     </div>
                 </div>
             </div>
-            <div class="col-md-3">
+            <div class="col-md-3 col-6">
                 <div class="card border-0 shadow-sm bg-warning text-dark">
                     <div class="card-body p-3">
                         <div class="small opacity-75">Sedang Dipinjam</div>
@@ -144,7 +111,7 @@ $result_laporan = mysqli_stmt_get_result($stmt_lap);
                     </div>
                 </div>
             </div>
-            <div class="col-md-3">
+            <div class="col-md-3 col-6">
                 <div class="card border-0 shadow-sm bg-success text-white">
                     <div class="card-body p-3">
                         <div class="small opacity-75">Denda Terkumpul (Lunas)</div>
@@ -152,7 +119,7 @@ $result_laporan = mysqli_stmt_get_result($stmt_lap);
                     </div>
                 </div>
             </div>
-            <div class="col-md-3">
+            <div class="col-md-3 col-6">
                 <div class="card border-0 shadow-sm bg-danger text-white">
                     <div class="card-body p-3">
                         <div class="small opacity-75">Denda Tertunggak</div>
@@ -235,12 +202,31 @@ $result_laporan = mysqli_stmt_get_result($stmt_lap);
                                         <?php endif; ?>
                                     </td>
                                     <td class="text-center">
+                                        <?php 
+                                        // Hitung estimasi denda berjalan untuk buku terlambat yang belum dikembalikan
+                                        $estimasi_denda = 0;
+                                        $hari_terlambat = 0;
+                                        if ($row['status'] === 'dipinjam' && empty($row['fine_id'])) {
+                                            // Buku masih dipinjam & belum ada record denda
+                                            $today = new DateTime();
+                                            $due = new DateTime($row['due_date']);
+                                            if ($today > $due) {
+                                                $hari_terlambat = $today->diff($due)->days;
+                                                $estimasi_denda = $hari_terlambat * 2000;
+                                            }
+                                        }
+                                        ?>
                                         <?php if ($row['fine_amount'] > 0): ?>
                                             <?php if ($row['fine_status'] === 'lunas'): ?>
                                                 <span class="badge bg-success">LUNAS (Rp<?= number_format($row['fine_amount'], 0, ',', '.'); ?>)</span>
                                             <?php else: ?>
-                                                <span class="badge bg-danger">RP <?= number_format($row['fine_amount'], 0, ',', '.'); ?> (TERTUNGGAK)</span>
+                                                <span class="badge bg-danger">Rp <?= number_format($row['fine_amount'], 0, ',', '.'); ?> (TERTUNGGAK)</span>
                                             <?php endif; ?>
+                                        <?php elseif ($estimasi_denda > 0): ?>
+                                            <span class="badge bg-danger">
+                                                Rp <?= number_format($estimasi_denda, 0, ',', '.'); ?>
+                                            </span><br>
+                                            <small class="text-danger fw-bold"><?= $hari_terlambat; ?> hari terlambat</small>
                                         <?php else: ?>
                                             <span class="text-muted small">Rp 0</span>
                                         <?php endif; ?>
@@ -249,6 +235,10 @@ $result_laporan = mysqli_stmt_get_result($stmt_lap);
                                         <?php if ($row['fine_amount'] > 0 && $row['fine_status'] === 'belum_dibayar'): ?>
                                             <a href="../peminjaman/bayar_denda.php?id=<?= $row['fine_id']; ?>&from=laporan" class="btn btn-sm btn-success fw-bold" onclick="return confirm('Tandai denda ini lunas?');">
                                                 💵 Lunasi
+                                            </a>
+                                        <?php elseif ($estimasi_denda > 0): ?>
+                                            <a href="../peminjaman/kembali.php?id=<?= $row['id']; ?>" class="btn btn-sm btn-warning fw-bold" onclick="return confirm('Proses pengembalian buku ini?');">
+                                                📥 Kembalikan
                                             </a>
                                         <?php else: ?>
                                             <span class="text-muted small">-</span>
@@ -269,9 +259,7 @@ $result_laporan = mysqli_stmt_get_result($stmt_lap);
             </div>
         </div>
 
-    </div>
+    </div><!-- /content-wrapper -->
+</div><!-- /main-content -->
 
-    <!-- Bootstrap 5 JS Bundle via CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
+<?php include '../templates/footer.php'; ?>

@@ -43,35 +43,30 @@ $stmt = mysqli_prepare($koneksi, $sql);
 mysqli_stmt_bind_param($stmt, "i", $member_id);
 mysqli_stmt_execute($stmt);
 $result = mysqli_stmt_get_result($stmt);
+
+// Pengaturan template
+$page_title  = 'Riwayat Peminjaman';
+$active_page = 'riwayat';
+$base_url    = '../';
+$breadcrumb  = '<a href="../dashboard_anggota.php">Dashboard</a> / <strong>Riwayat Peminjaman</strong>';
+
+// Hitung data untuk sidebar anggota
+$active_loans = 0;
+$total_denda  = 0;
+$total_buku_query = mysqli_fetch_assoc(mysqli_query($koneksi, "SELECT COUNT(*) as total FROM books WHERE available_stock > 0"));
+$total_buku = $total_buku_query['total'];
+
+include '../templates/header.php';
+include '../templates/sidebar_anggota.php';
 ?>
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Riwayat Peminjaman Saya - SIPUS</title>
-    <!-- Bootstrap 5 CSS via CDN -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body class="bg-light">
 
-    <!-- Navbar Navigasi -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-info shadow-sm mb-4">
-        <div class="container">
-            <a class="navbar-brand fw-bold text-dark" href="../dashboard_anggota.php">📚 SIPUS RPL</a>
-            <div class="d-flex align-items-center">
-                <span class="text-dark me-3">Halo, <strong><?= htmlspecialchars($_SESSION['full_name']); ?></strong> (Anggota)</span>
-                <a href="../logout.php" class="btn btn-outline-dark btn-sm">Logout</a>
-            </div>
-        </div>
-    </nav>
+<div class="main-content">
+    <?php include '../templates/topnav.php'; ?>
+    <div class="content-wrapper">
 
-    <div class="container py-2">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <div>
-                <h3 class="fw-bold text-dark mb-0">Riwayat Peminjaman Saya</h3>
-                <p class="text-muted small">Daftar seluruh buku yang pernah dan sedang Anda pinjam.</p>
-            </div>
+        <!-- Navigasi Kembali -->
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+            <p class="text-muted small mb-0">Daftar seluruh buku yang pernah dan sedang Anda pinjam.</p>
             <a href="../dashboard_anggota.php" class="btn btn-secondary btn-sm">&larr; Kembali ke Dashboard</a>
         </div>
 
@@ -155,9 +150,7 @@ $result = mysqli_stmt_get_result($stmt);
                 </div>
             </div>
         </div>
-    </div>
+    </div><!-- /content-wrapper -->
+</div><!-- /main-content -->
 
-    <!-- Bootstrap 5 JS Bundle via CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
+<?php include '../templates/footer.php'; ?>

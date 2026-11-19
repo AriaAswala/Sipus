@@ -34,6 +34,7 @@ if (isset($_SESSION['user_id'])) {
             display: flex;
             align-items: center;
             justify-content: center;
+            padding: 16px;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
         .card-login {
@@ -68,6 +69,14 @@ if (isset($_SESSION['user_id'])) {
         .btn-custom:hover {
             background: #2a5298;
             color: #ffffff;
+        }
+        @media (max-width: 576px) {
+            .login-header {
+                padding: 24px 20px 8px;
+            }
+            .login-body {
+                padding: 16px 20px 28px;
+            }
         }
     </style>
 </head>
@@ -122,10 +131,13 @@ if (isset($_SESSION['user_id'])) {
             <div class="text-center mt-3 text-muted small">
                 <p class="mb-0">Peran: <strong>Admin | Pustakawan | Anggota</strong></p>
             </div>
+            <div class="text-center mt-2">
+                <a href="index.php" class="text-decoration-none small">&larr; Kembali ke Katalog Buku</a>
+            </div>
         </div>
     </div>
 
     <!-- Bootstrap 5 JS Bundle via CDN -->
-    <script href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

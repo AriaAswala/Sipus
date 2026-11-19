@@ -84,34 +84,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 }
+$page_title  = 'Tambah Anggota Baru';
+$active_page = 'anggota';
+$base_url    = '../';
+$_dash       = $_SESSION['role'] === 'admin' ? '../dashboard_admin.php' : '../dashboard_pustakawan.php';
+$breadcrumb  = '<a href="' . $_dash . '">Beranda</a> / <a href="index.php">Data Anggota</a> / <strong>Tambah</strong>';
+
+include '../templates/header.php';
+include '../templates/sidebar_staff.php';
 ?>
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tambah Anggota Baru - SIPUS</title>
-    <!-- Bootstrap 5 CSS via CDN -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body class="bg-light">
 
-    <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm mb-4">
-        <div class="container">
-            <a class="navbar-brand fw-bold" href="../dashboard_admin.php">📚 SIPUS RPL</a>
-        </div>
-    </nav>
-
-    <div class="container py-3">
+<div class="main-content">
+    <?php include '../templates/topnav.php'; ?>
+    <div class="content-wrapper">
         <div class="row justify-content-center">
-            <div class="col-md-8">
-                <div class="card shadow-sm border-0">
-                    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center py-3">
+            <div class="col-lg-8">
+                <div class="card content-card">
+                    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center flex-wrap gap-2 py-3">
                         <h5 class="mb-0 fw-bold">👤 Tambah Anggota Baru</h5>
                         <a href="index.php" class="btn btn-light btn-sm fw-semibold">&larr; Kembali</a>
                     </div>
-                    <div class="card-body p-4">
+                    <div class="card-body p-3 p-md-4">
 
                         <?php if (!empty($error)): ?>
                             <div class="alert alert-danger alert-dismissible fade show" role="alert">
@@ -150,7 +143,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     <label class="form-label fw-bold small">Alamat Tempat Tinggal</label>
                                     <textarea name="address" class="form-control" rows="3" placeholder="Alamat lengkap"></textarea>
                                 </div>
-                                <div class="col-md-12 mt-4 d-flex justify-content-end gap-2">
+                                <div class="col-md-12 mt-4 d-flex justify-content-end flex-wrap gap-2">
                                     <a href="index.php" class="btn btn-secondary px-4">Batal</a>
                                     <button type="submit" class="btn btn-primary px-4 fw-bold">Daftarkan Anggota</button>
                                 </div>
@@ -161,7 +154,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </div>
             </div>
         </div>
-    </div>
+    </div><!-- /content-wrapper -->
+</div><!-- /main-content -->
 
-</body>
-</html>
+<?php include '../templates/footer.php'; ?>

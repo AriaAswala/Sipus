@@ -32,56 +32,25 @@ if (!empty($keyword)) {
             ORDER BY m.id DESC";
     $result = mysqli_query($koneksi, $sql);
 }
+
+// Pengaturan template
+$page_title  = 'Data Anggota';
+$active_page = 'anggota';
+$base_url    = '../';
+$breadcrumb  = '<a href="../dashboard_admin.php">Beranda</a> / Master Data / <strong>Data Anggota</strong>';
+
+include '../templates/header.php';
+include '../templates/sidebar_staff.php';
 ?>
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manajemen Anggota - SIPUS</title>
-    <!-- Bootstrap 5 CSS via CDN -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body class="bg-light">
 
-    <!-- Navbar Navigasi -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm mb-4">
-        <div class="container">
-            <a class="navbar-brand fw-bold" href="../dashboard_admin.php">📚 SIPUS RPL</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="<?= $_SESSION['role'] === 'admin' ? '../dashboard_admin.php' : '../dashboard_pustakawan.php'; ?>">Dashboard</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="../buku/index.php">Data Buku</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link active fw-bold" href="index.php">Data Anggota</a>
-                    </li>
-                </ul>
-                <div class="d-flex align-items-center">
-                    <span class="text-white me-3 small">Halo, <strong><?= htmlspecialchars($_SESSION['full_name']); ?></strong> (<?= strtoupper($_SESSION['role']); ?>)</span>
-                    <a href="../logout.php" class="btn btn-outline-danger btn-sm">Logout</a>
-                </div>
-            </div>
-        </div>
-    </nav>
+<div class="main-content">
+    <?php include '../templates/topnav.php'; ?>
+    <div class="content-wrapper">
 
-    <div class="container py-2">
-        
         <!-- Header & Tombol Tambah -->
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <div>
-                <h3 class="fw-bold text-dark mb-0">Manajemen Data Anggota</h3>
-                <p class="text-muted small">Kelola pendaftaran anggota, kontak, dan status keanggotaan aktif/nonaktif.</p>
-            </div>
-            <a href="tambah.php" class="btn btn-primary fw-semibold">
-                👤 Tambah Anggota Baru
-            </a>
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+            <p class="text-muted small mb-0">Kelola pendaftaran anggota, kontak, dan status keanggotaan aktif/nonaktif.</p>
+            <a href="tambah.php" class="btn btn-primary fw-semibold">👤 Tambah Anggota Baru</a>
         </div>
 
         <!-- Pesan Alert Notifikasi -->
@@ -110,7 +79,7 @@ if (!empty($keyword)) {
         <?php endif; ?>
 
         <!-- Form Pencarian Anggota -->
-        <div class="card shadow-sm border-0 mb-4">
+        <div class="card content-card mb-3">
             <div class="card-body p-3">
                 <form action="index.php" method="GET" class="row g-2">
                     <div class="col-md-10">
@@ -127,20 +96,30 @@ if (!empty($keyword)) {
         </div>
 
         <!-- Tabel Daftar Anggota -->
-        <div class="card shadow-sm border-0">
+        <div class="card content-card">
+            <div class="card-header">
+                <span>👥 Daftar Anggota Perpustakaan</span>
+                <span class="text-muted small">
+                    <?php if (!empty($keyword)): ?>
+                        Hasil pencarian: "<?= htmlspecialchars($keyword); ?>"
+                    <?php else: ?>
+                        Semua anggota
+                    <?php endif; ?>
+                </span>
+            </div>
             <div class="card-body p-0">
                 <div class="table-responsive">
-                    <table class="table table-hover table-striped align-middle mb-0">
-                        <thead class="table-dark">
+                    <table class="table table-modern">
+                        <thead>
                             <tr>
-                                <th class="text-center" style="width: 50px;">No</th>
+                                <th class="text-center" style="width:50px;">No</th>
                                 <th>Kode Anggota</th>
                                 <th>Nama Lengkap</th>
                                 <th>Username</th>
                                 <th>No. Telepon</th>
                                 <th>Alamat</th>
                                 <th class="text-center">Status</th>
-                                <th class="text-center" style="width: 200px;">Aksi</th>
+                                <th class="text-center" style="width:200px;">Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -158,9 +137,9 @@ if (!empty($keyword)) {
                                     <td><?= htmlspecialchars($row['address'] ?: '-'); ?></td>
                                     <td class="text-center">
                                         <?php if ($row['status'] === 'aktif'): ?>
-                                            <span class="badge bg-success">AKTIF</span>
+                                            <span class="badge-status" style="background:#EAFAF1; color:#27AE60;">AKTIF</span>
                                         <?php else: ?>
-                                            <span class="badge bg-danger">NONAKTIF</span>
+                                            <span class="badge-status" style="background:#FDEDEC; color:#E74C3C;">NONAKTIF</span>
                                         <?php endif; ?>
                                     </td>
                                     <td class="text-center">
@@ -176,7 +155,7 @@ if (!empty($keyword)) {
                             else: 
                             ?>
                                 <tr>
-                                    <td colspan="8" class="text-center py-4 text-muted">Data anggota tidak ditemukan.</td>
+                                    <td colspan="8" class="text-center py-4 text-muted">📭 Data anggota tidak ditemukan.</td>
                                 </tr>
                             <?php endif; ?>
                         </tbody>
@@ -185,9 +164,7 @@ if (!empty($keyword)) {
             </div>
         </div>
 
-    </div>
+    </div><!-- /content-wrapper -->
+</div><!-- /main-content -->
 
-    <!-- Bootstrap 5 JS Bundle via CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
+<?php include '../templates/footer.php'; ?>

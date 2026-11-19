@@ -2,7 +2,7 @@
 /**
  * File: peminjaman/kembali.php
  * Lokasi: sipus/peminjaman/kembali.php
- * Deskripsi: Memproses pengembalian buku, menghitung denda keterlambatan (Rp1.000/hari),
+ * Deskripsi: Memproses pengembalian buku, menghitung denda keterlambatan (Rp2.000/hari),
  *            serta mengembalikan status stok eksemplar buku.
  */
 
@@ -52,7 +52,7 @@ $fine_amount = 0;
 if ($ts_return > $ts_due) {
     $diff_seconds = $ts_return - $ts_due;
     $late_days    = floor($diff_seconds / (60 * 60 * 24));
-    $fine_amount  = $late_days * 1000; // Rp 1.000 per hari keterlambatan
+    $fine_amount  = $late_days * 2000; // Rp 2.000 per hari keterlambatan
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -93,34 +93,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     header("Location: index.php?status=sukses_kembali");
     exit();
 }
+$page_title  = 'Pengembalian Buku';
+$active_page = 'peminjaman';
+$base_url    = '../';
+$_dash       = $_SESSION['role'] === 'admin' ? '../dashboard_admin.php' : '../dashboard_pustakawan.php';
+$breadcrumb  = '<a href="' . $_dash . '">Beranda</a> / <a href="index.php">Sirkulasi</a> / <strong>Pengembalian</strong>';
+
+include '../templates/header.php';
+include '../templates/sidebar_staff.php';
 ?>
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Proses Pengembalian Buku - SIPUS</title>
-    <!-- Bootstrap 5 CSS via CDN -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body class="bg-light">
 
-    <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm mb-4">
-        <div class="container">
-            <a class="navbar-brand fw-bold" href="../dashboard_admin.php">📚 SIPUS RPL</a>
-        </div>
-    </nav>
-
-    <div class="container py-3">
+<div class="main-content">
+    <?php include '../templates/topnav.php'; ?>
+    <div class="content-wrapper">
         <div class="row justify-content-center">
-            <div class="col-md-7">
-                <div class="card shadow-sm border-0">
-                    <div class="card-header bg-success text-white d-flex justify-content-between align-items-center py-3">
+            <div class="col-lg-7">
+                <div class="card content-card">
+                    <div class="card-header bg-success text-white d-flex justify-content-between align-items-center flex-wrap gap-2 py-3">
                         <h5 class="mb-0 fw-bold">↩️ Konfirmasi Pengembalian Buku</h5>
                         <a href="index.php" class="btn btn-light btn-sm fw-semibold">&larr; Kembali</a>
                     </div>
-                    <div class="card-body p-4">
+                    <div class="card-body p-3 p-md-4">
 
                         <form action="kembali.php?id=<?= $id; ?>" method="POST">
                             <div class="mb-3">
@@ -136,19 +129,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <hr>
 
                             <div class="row g-3">
-                                <div class="col-6">
+                                <div class="col-sm-6">
                                     <label class="form-label small text-muted">Tanggal Pinjam</label>
                                     <input type="text" class="form-control bg-light" value="<?= date('d/m/Y', strtotime($loan['loan_date'])); ?>" disabled>
                                 </div>
-                                <div class="col-6">
+                                <div class="col-sm-6">
                                     <label class="form-label small text-muted">Tanggal Jatuh Tempo</label>
                                     <input type="text" class="form-control bg-light" value="<?= date('d/m/Y', strtotime($loan['due_date'])); ?>" disabled>
                                 </div>
-                                <div class="col-6">
+                                <div class="col-sm-6">
                                     <label class="form-label small text-muted">Tanggal Pengembalian (Hari Ini)</label>
                                     <input type="text" class="form-control bg-light fw-bold" value="<?= date('d/m/Y'); ?>" disabled>
                                 </div>
-                                <div class="col-6">
+                                <div class="col-sm-6">
                                     <label class="form-label small text-muted">Keterlambatan</label>
                                     <input type="text" class="form-control <?= $late_days > 0 ? 'bg-danger text-white' : 'bg-light'; ?> fw-bold" value="<?= $late_days; ?> Hari" disabled>
                                 </div>
@@ -158,7 +151,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <?php if ($late_days > 0): ?>
                                 <div class="alert alert-warning mt-4 mb-3 border-warning">
                                     <h6 class="fw-bold text-dark mb-1">⚠️ Terdeteksi Keterlambatan Pengembalian!</h6>
-                                    <p class="small mb-2">Terlambat <?= $late_days; ?> Hari &times; Rp 1.000 = <strong class="fs-5 text-danger">Rp <?= number_format($fine_amount, 0, ',', '.'); ?></strong></p>
+                                    <p class="small mb-2">Terlambat <?= $late_days; ?> Hari &times; Rp 2.000 = <strong class="fs-5 text-danger">Rp <?= number_format($fine_amount, 0, ',', '.'); ?></strong></p>
                                     <div class="form-check">
                                         <input class="form-check-input" type="checkbox" name="bayar_langsung" id="bayar_langsung" value="1" checked>
                                         <label class="form-check-label fw-bold small" for="bayar_langsung">
@@ -172,7 +165,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 </div>
                             <?php endif; ?>
 
-                            <div class="d-flex justify-content-end gap-2 mt-4">
+                            <div class="d-flex justify-content-end flex-wrap gap-2 mt-4">
                                 <a href="index.php" class="btn btn-secondary px-4">Batal</a>
                                 <button type="submit" class="btn btn-success px-4 fw-bold">Proses Pengembalian Buku</button>
                             </div>
@@ -182,7 +175,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </div>
             </div>
         </div>
-    </div>
+    </div><!-- /content-wrapper -->
+</div><!-- /main-content -->
 
-</body>
-</html>
+<?php include '../templates/footer.php'; ?>

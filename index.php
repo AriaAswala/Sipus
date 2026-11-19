@@ -46,6 +46,21 @@ if (!empty($keyword)) {
             padding: 20px;
             border-radius: 15px;
         }
+        @media (max-width: 576px) {
+            .hero-section {
+                padding: 32px 0 28px 0;
+                border-radius: 0 0 18px 18px;
+            }
+            .hero-section h1 {
+                font-size: 1.45rem;
+            }
+            .hero-section .lead {
+                font-size: 0.95rem;
+            }
+            .search-box {
+                padding: 14px;
+            }
+        }
     </style>
 </head>
 <body class="bg-light">
@@ -66,7 +81,7 @@ if (!empty($keyword)) {
                 </ul>
 
                 <!-- Menu Login / Status Akun -->
-                <div class="d-flex align-items-center gap-2">
+                <div class="d-flex align-items-center flex-wrap gap-2 mt-2 mt-lg-0">
                     <?php if (isset($_SESSION['user_id'])): ?>
                         <!-- Jika Sudah Login -->
                         <span class="text-white me-2 small">Halo, <strong><?= htmlspecialchars($_SESSION['full_name']); ?></strong></span>
