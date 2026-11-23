@@ -18,6 +18,16 @@ if (isset($_SESSION['user_id'])) {
     }
     exit();
 }
+
+// Cek apakah login sedang ditunda sementara setelah 5x gagal berturut-turut (REQ-03 / TC-03)
+$is_locked = false;
+$sisa_detik = 0;
+if (isset($_SESSION['login_lockout_until']) && time() < $_SESSION['login_lockout_until']) {
+    $is_locked = true;
+    $sisa_detik = $_SESSION['login_lockout_until'] - time();
+} elseif (isset($_SESSION['login_lockout_until'])) {
+    unset($_SESSION['login_lockout_until']);
+}
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -56,7 +66,7 @@ if (isset($_SESSION['user_id'])) {
         }
         .login-body {
             background: #ffffff;
-            padding: 20px 30px 40px 30px;
+            padding: 20px 30px 36px 30px;
         }
         .btn-custom {
             background: #1e3c72;
@@ -91,10 +101,24 @@ if (isset($_SESSION['user_id'])) {
         <div class="login-body">
 
             <!-- Pesan Notifikasi Alert -->
-            <?php if (isset($_GET['pesan'])): ?>
+            <?php if ($is_locked): ?>
+                <div class="alert alert-danger small mb-3" role="alert">
+                    ⏳ <strong>Login Ditunda Sementara!</strong><br>
+                    Terlalu banyak percobaan gagal (5x berturut-turut). Silakan coba lagi dalam
+                    <strong id="countdownText"><?= floor($sisa_detik / 60); ?> menit <?= $sisa_detik % 60; ?> detik</strong>.
+                </div>
+            <?php elseif (isset($_GET['pesan'])): ?>
                 <?php if ($_GET['pesan'] == 'gagal'): ?>
                     <div class="alert alert-danger alert-dismissible fade show small mb-3" role="alert">
                         <strong>Login Gagal!</strong> Username atau password salah.
+                        <?php if (isset($_GET['sisa_coba'])): ?>
+                            <br><span class="text-muted">Sisa percobaan: <strong><?= (int)$_GET['sisa_coba']; ?> kali</strong> sebelum login ditunda sementara.</span>
+                        <?php endif; ?>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                <?php elseif ($_GET['pesan'] == 'session_expired'): ?>
+                    <div class="alert alert-warning alert-dismissible fade show small mb-3" role="alert">
+                        ⏱️ <strong>Sesi Berakhir!</strong> Anda tidak aktif selama 30 menit. Silakan login kembali.
                         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                     </div>
                 <?php elseif ($_GET['pesan'] == 'belum_login'): ?>
@@ -119,19 +143,20 @@ if (isset($_SESSION['user_id'])) {
             <form action="proses_login.php" method="POST">
                 <div class="mb-3">
                     <label for="username" class="form-label small fw-bold">Username</label>
-                    <input type="text" name="username" id="username" class="form-control" placeholder="Masukkan username" required autofocus>
+                    <input type="text" name="username" id="username" class="form-control" placeholder="Masukkan username" <?= $is_locked ? 'disabled' : 'required autofocus'; ?>>
                 </div>
                 <div class="mb-4">
                     <label for="password" class="form-label small fw-bold">Password</label>
-                    <input type="password" name="password" id="password" class="form-control" placeholder="Masukkan password" required>
+                    <input type="password" name="password" id="password" class="form-control" placeholder="Masukkan password" <?= $is_locked ? 'disabled' : 'required'; ?>>
                 </div>
-                <button type="submit" class="btn btn-custom w-100 mb-3">Masuk ke Sistem</button>
+                <button type="submit" id="btnLogin" class="btn btn-custom w-100 mb-3" <?= $is_locked ? 'disabled' : ''; ?>>
+                    <?= $is_locked ? 'Login Ditunda Sementara...' : 'Masuk ke Sistem'; ?>
+                </button>
             </form>
 
-            <div class="text-center mt-3 text-muted small">
-                <p class="mb-0">Peran: <strong>Admin | Pustakawan | Anggota</strong></p>
-            </div>
-            <div class="text-center mt-2">
+            <div class="text-center border-top pt-3">
+                <p class="small text-muted mb-2">Belum menjadi anggota perpustakaan?</p>
+                <a href="register.php" class="btn btn-outline-primary btn-sm w-100 fw-semibold mb-2">📝 Daftar Anggota Baru</a>
                 <a href="index.php" class="text-decoration-none small">&larr; Kembali ke Katalog Buku</a>
             </div>
         </div>
@@ -139,5 +164,24 @@ if (isset($_SESSION['user_id'])) {
 
     <!-- Bootstrap 5 JS Bundle via CDN -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <?php if ($is_locked): ?>
+    <script>
+        (function () {
+            var remaining = <?= (int)$sisa_detik; ?>;
+            var el = document.getElementById('countdownText');
+            var timer = setInterval(function () {
+                remaining--;
+                if (remaining <= 0) {
+                    clearInterval(timer);
+                    window.location.href = 'login.php';
+                    return;
+                }
+                var m = Math.floor(remaining / 60);
+                var s = remaining % 60;
+                if (el) el.textContent = m + ' menit ' + s + ' detik';
+            }, 1000);
+        })();
+    </script>
+    <?php endif; ?>
 </body>
 </html>

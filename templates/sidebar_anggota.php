@@ -68,6 +68,9 @@ if (isset($_name_parts_a[1])) $_initials_a .= strtoupper(substr($_name_parts_a[1
         <?php endif; ?>
 
         <div class="menu-label">Akun</div>
+        <a href="<?= $base_url; ?>anggota/profil.php" class="<?= $active_page === 'profil' ? 'active' : ''; ?>">
+            <span class="menu-icon">👤</span> Ubah Profil
+        </a>
         <a href="<?= $base_url; ?>logout.php" onclick="return confirm('Yakin ingin logout?');">
             <span class="menu-icon">🚪</span> Logout
         </a>

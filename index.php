@@ -93,12 +93,12 @@ if (!empty($keyword)) {
                         <a href="<?= $dashboard_url; ?>" class="btn btn-primary btn-sm fw-bold">Dashboard Saya &rarr;</a>
                         <a href="logout.php" class="btn btn-outline-danger btn-sm">Logout</a>
                     <?php else: ?>
-                        <!-- Jika Belum Login (Tampilkan Menu Login) -->
-                        <a href="login.php" class="btn btn-outline-light btn-sm px-3 fw-semibold">
-                            🔑 Masuk / Login
+                        <!-- Jika Belum Login (Tampilkan Menu Login & Daftar Anggota) -->
+                        <a href="register.php" class="btn btn-outline-warning btn-sm px-3 fw-semibold">
+                            📝 Daftar Anggota
                         </a>
                         <a href="login.php" class="btn btn-primary btn-sm px-3 fw-bold">
-                            Portal Login &rarr;
+                            🔑 Masuk / Login
                         </a>
                     <?php endif; ?>
                 </div>

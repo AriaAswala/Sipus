@@ -216,11 +216,11 @@ include 'templates/sidebar_anggota.php';
                     </a>
                 </div>
                 <div class="col-md-4">
-                    <a href="index.php" class="quick-action w-100">
-                        <div class="qa-icon" style="background: #FEF9E7; color: #F39C12;">📚</div>
+                    <a href="anggota/profil.php" class="quick-action w-100">
+                        <div class="qa-icon" style="background: #FEF9E7; color: #F39C12;">👤</div>
                         <div>
-                            <div>Katalog Perpustakaan</div>
-                            <small class="text-muted fw-normal">Jelajahi koleksi buku</small>
+                            <div>Ubah Profil Saya</div>
+                            <small class="text-muted fw-normal">Perbarui data & password</small>
                         </div>
                     </a>
                 </div>
